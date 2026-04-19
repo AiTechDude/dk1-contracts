@@ -1,0 +1,345 @@
+openapi: 3.1.0
+info:
+  title: DK1 Command Center API
+  version: 0.2.4
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+  /v1/orchestration/verification/summary:
+    get:
+      summary: Orchestration verification summary
+      responses:
+        '200':
+          description: Verification summary for managed orchestration checks.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationSummary'
+  /v1/orchestration/verification/agents:
+    get:
+      summary: Orchestration verification fleet
+      responses:
+        '200':
+          description: Per-agent verification rows for the orchestration console.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationAgents'
+  /v1/orchestration/verification/agents/{agent_id}:
+    get:
+      summary: Orchestration verification agent detail
+      parameters:
+        - in: path
+          name: agent_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Expanded verification detail for one managed periodic agent.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationAgentDetail'
+  /v1/orchestration/verification/stream:
+    get:
+      summary: Orchestration verification event stream
+      responses:
+        '200':
+          description: Server-Sent Events stream for verification summary updates.
+          content:
+            text/event-stream:
+              schema:
+                type: string
+  /v1/alerts/operational:
+    get:
+      summary: Operational alerts
+      parameters:
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+      responses:
+        '200':
+          description: Rule-backed operational alerts for the operator console.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OperationalAlert'
+components:
+  schemas:
+    Health:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          example: ok
+    OperationalAlert:
+      type: object
+      required:
+        - alert_id
+        - title
+        - description
+        - severity
+        - domain
+        - source_entity_type
+        - source_entity_id
+        - source_entity_name
+        - trigger_rule
+        - threshold
+        - first_seen_at
+        - last_seen_at
+        - recommended_action
+      properties:
+        alert_id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        severity:
+          type: string
+        domain:
+          type: string
+        source_entity_type:
+          type: string
+        source_entity_id:
+          type: string
+        source_entity_name:
+          type: string
+        trigger_rule:
+          type: string
+        threshold:
+          type: string
+        first_seen_at:
+          type: string
+          format: date-time
+        last_seen_at:
+          type: string
+          format: date-time
+        acknowledged_by:
+          type:
+            - string
+            - 'null'
+        resolution_state:
+          type:
+            - string
+            - 'null'
+        recommended_action:
+          type: string
+        detail_href:
+          type:
+            - string
+            - 'null'
+    VerificationFinding:
+      type: object
+      required:
+        - finding_id
+        - agent_id
+        - verification_state
+        - severity
+        - finding_type
+        - title
+        - detail
+        - first_seen_at
+        - last_seen_at
+      properties:
+        finding_id:
+          type: string
+        agent_id:
+          type: string
+        run_id:
+          type:
+            - string
+            - 'null'
+        execution_id:
+          type:
+            - string
+            - 'null'
+        verification_state:
+          type: string
+        severity:
+          type: string
+        finding_type:
+          type: string
+        title:
+          type: string
+        detail:
+          type: string
+        recommended_action:
+          type:
+            - string
+            - 'null'
+        owner:
+          type:
+            - string
+            - 'null'
+        first_seen_at:
+          type: string
+          format: date-time
+        last_seen_at:
+          type: string
+          format: date-time
+        last_event_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+    VerificationStatus:
+      type: object
+      required:
+        - verification_state
+        - summary
+      properties:
+        verification_state:
+          type: string
+        summary:
+          type: string
+        owner:
+          type:
+            - string
+            - 'null'
+        last_event_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        last_verified_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        last_heartbeat_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        heartbeat_age_seconds:
+          type:
+            - integer
+            - 'null'
+        next_due_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        current_run_id:
+          type:
+            - string
+            - 'null'
+        current_run_status:
+          type:
+            - string
+            - 'null'
+        artifact_status:
+          type: string
+        required_artifact_count:
+          type: integer
+        verified_artifact_count:
+          type: integer
+        latest_finding:
+          anyOf:
+            - $ref: '#/components/schemas/VerificationFinding'
+            - type: 'null'
+    VerificationAgent:
+      type: object
+      required:
+        - agent_id
+        - name
+        - verification
+      properties:
+        agent_id:
+          type: string
+        name:
+          type: string
+        owner:
+          type:
+            - string
+            - 'null'
+        verification:
+          $ref: '#/components/schemas/VerificationStatus'
+    VerificationAgentDetail:
+      type: object
+      required:
+        - agent_id
+        - name
+        - verification
+      properties:
+        agent_id:
+          type: string
+        name:
+          type: string
+        owner:
+          type:
+            - string
+            - 'null'
+        verification:
+          $ref: '#/components/schemas/VerificationStatus'
+        recent_findings:
+          type: array
+          items:
+            $ref: '#/components/schemas/VerificationFinding'
+    VerificationAgents:
+      type: object
+      required:
+        - generated_at
+      properties:
+        counts:
+          type: object
+          additionalProperties:
+            type: integer
+        agents:
+          type: array
+          items:
+            $ref: '#/components/schemas/VerificationAgent'
+        backbone_stream_connected:
+          type: boolean
+        backbone_status:
+          type: string
+        last_backbone_event_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        generated_at:
+          type: string
+          format: date-time
+    VerificationSummary:
+      type: object
+      required:
+        - generated_at
+      properties:
+        counts:
+          type: object
+          additionalProperties:
+            type: integer
+        active_findings:
+          type: integer
+        backbone_stream_connected:
+          type: boolean
+        backbone_status:
+          type: string
+        last_backbone_event_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        generated_at:
+          type: string
+          format: date-time

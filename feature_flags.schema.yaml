@@ -1,0 +1,25 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: "DK1 Feature Flag Schema"
+type: object
+required:
+  - feature_name
+  - enabled
+  - min_version
+  - platform_allowlist
+  - rollout_percentage
+properties:
+  feature_name:
+    type: string
+  enabled:
+    type: boolean
+  min_version:
+    type: string
+  platform_allowlist:
+    type: array
+    items:
+      type: string
+      enum: [web, macos, ios]
+  rollout_percentage:
+    type: integer
+    minimum: 0
+    maximum: 100

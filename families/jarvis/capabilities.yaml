@@ -1,0 +1,7 @@
+capabilities:
+  - feature: realtime_voice
+    platforms: [web, macos, ios]
+    required_api_version: "0.1"
+    status: stable
+    owner: dan.kim
+    rollout_flag: jarvis_realtime_voice
