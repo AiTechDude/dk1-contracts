@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: DK1 Jarvis API
-  version: 0.1.0
+  version: 0.2.0
 paths:
   /health:
     get:
@@ -13,6 +13,30 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Health'
+  /monitoring/knowledge-graph:
+    get:
+      summary: Knowledge Graph monitor snapshot and recent history
+      description: >
+        Current status, freshness, and transition history for the Jarvis-side
+        background monitor of dk1-knowledge-graph. Consumed by the macOS /
+        iOS diagnostics panel. Token-gated via X-DK1-TOKEN.
+      parameters:
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 120
+            default: 20
+          description: Maximum number of history rows to return (server clamps to 1..120).
+      responses:
+        '200':
+          description: Current snapshot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KnowledgeGraphMonitorSnapshot'
 components:
   schemas:
     Health:
@@ -22,3 +46,63 @@ components:
         status:
           type: string
           example: ok
+    KnowledgeGraphMonitorEvent:
+      type: object
+      required: [observed_at_utc]
+      properties:
+        observed_at_utc:
+          type: string
+          format: date-time
+        status:
+          type: string
+          example: healthy
+        alert_state:
+          type: string
+          enum: [healthy, warning, critical, unconfigured, unknown]
+        detail:
+          type: string
+        freshness_state:
+          type: string
+          example: fresh
+        last_success_at:
+          type: string
+        last_refresh_status:
+          type: string
+          example: ok
+        consecutive_failures:
+          type: integer
+          minimum: 0
+        is_transition_event:
+          type: boolean
+    KnowledgeGraphMonitorSnapshot:
+      type: object
+      required: [alert_state, history]
+      properties:
+        checked_at_utc:
+          type: string
+          format: date-time
+        status:
+          type: string
+          example: healthy
+        alert_state:
+          type: string
+          enum: [healthy, warning, critical, unconfigured, unknown]
+        detail:
+          type: string
+        freshness_state:
+          type: string
+        last_success_at:
+          type: string
+        last_refresh_status:
+          type: string
+        consecutive_failures:
+          type: integer
+          minimum: 0
+        last_transition_at:
+          type: string
+        url:
+          type: string
+        history:
+          type: array
+          items:
+            $ref: '#/components/schemas/KnowledgeGraphMonitorEvent'
