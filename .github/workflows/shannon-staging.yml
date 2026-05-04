@@ -1,0 +1,64 @@
+# DK1 Security Baseline: shannon-staging
+name: Shannon Staging Pentest
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 7 * * 0"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: shannon-dk1-staging-${{ github.repository_id }}
+  cancel-in-progress: false
+
+jobs:
+  shannon:
+    runs-on: ubuntu-latest
+    environment: dk1-staging-security
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Render Shannon runtime config
+        env:
+          DK1_STAGING_URL: ${{ vars.DK1_STAGING_URL }}
+          SHANNON_TEST_USERNAME: ${{ secrets.SHANNON_TEST_USERNAME }}
+          SHANNON_TEST_PASSWORD: ${{ secrets.SHANNON_TEST_PASSWORD }}
+        run: |
+          python scripts/security/render_shannon_config.py \
+            --template security/shannon-dk1.template.yaml \
+            --output "$RUNNER_TEMP/shannon-dk1.runtime.yaml"
+      - name: Guardrail against production URL
+        env:
+          DK1_STAGING_URL: ${{ vars.DK1_STAGING_URL }}
+        run: |
+          host="${DK1_STAGING_URL#*://}"
+          host="${host%%/*}"
+          host="${host%%:*}"
+          case "$host" in
+            prod|production|prod.*|production.*|*.prod|*.production|*.prod.*|*.production.*)
+              echo "Refusing to run Shannon against production-like host: $DK1_STAGING_URL" >&2
+              exit 2
+              ;;
+          esac
+      - name: Run Shannon
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          DK1_STAGING_URL: ${{ vars.DK1_STAGING_URL }}
+        run: |
+          npx -y @keygraph/shannon start \
+            -u "$DK1_STAGING_URL" \
+            -r "$GITHUB_WORKSPACE" \
+            -c "$RUNNER_TEMP/shannon-dk1.runtime.yaml" \
+            -o shannon-reports \
+            -w "dk1-${{ github.run_id }}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: shannon-report-${{ github.run_id }}
+          path: shannon-reports
+          if-no-files-found: warn
+          retention-days: 30
