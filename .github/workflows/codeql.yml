@@ -1,0 +1,49 @@
+# DK1 Security Baseline: codeql
+name: CodeQL Security Scan
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+  schedule:
+    - cron: "15 6 * * 1"
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  analyze:
+    name: CodeQL (${{ matrix.language }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: python
+    os: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-extended
+      - name: Perform CodeQL analysis
+        id: codeql-analyze
+        continue-on-error: true
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:${{ matrix.language }}"
+      - name: Report CodeQL availability
+        if: steps.codeql-analyze.outcome == 'failure'
+        run: |
+          echo "::warning::CodeQL analysis or upload could not complete."
+          echo "::warning::Enable code scanning, then set DK1_CODEQL_STRICT=true for a hard gate."
+      - name: Enforce CodeQL
+        if: steps.codeql-analyze.outcome == 'failure' && vars.DK1_CODEQL_STRICT == 'true'
+        run: exit 1
