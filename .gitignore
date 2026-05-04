@@ -3,3 +3,9 @@ __pycache__/
 *.py[cod]
 .venv/
 .DS_Store
+shannon-reports/
+security/reports/
+*.runtime.yaml
+shannon-dk1.runtime.yaml
+.env.*
+!.env.example
