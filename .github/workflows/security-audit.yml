@@ -1,0 +1,23 @@
+# DK1 Security Baseline: security-audit
+name: Security Baseline Audit
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "45 6 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  baseline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: |
+          python -m py_compile                     scripts/security/render_shannon_config.py                     scripts/security/validate_baseline.py
+      - run: python scripts/security/validate_baseline.py
+      - run: git diff --check

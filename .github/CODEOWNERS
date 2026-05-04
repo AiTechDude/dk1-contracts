@@ -1,0 +1,8 @@
+* @dankim
+.github/workflows/ @dankim
+.github/dependabot.yml @dankim
+.github/dependency-review-config.yml @dankim
+.github/CODEOWNERS @dankim
+SECURITY.md @dankim
+security/ @dankim
+scripts/security/ @dankim

@@ -1,0 +1,31 @@
+description: >-
+  DK1 staging/local environment with seeded non-production data only.
+  Do not use production data or production hosts.
+vuln_classes: [injection, xss, auth, authz, ssrf]
+exploit: "true"
+rules_of_engagement: |
+  - Authorized DK1 local/staging testing only.
+  - Do not run against production.
+  - Use seeded fake data only.
+  - Avoid destructive admin, reset, purge, billing, or data-delete endpoints.
+authentication:
+  login_type: form
+  login_url: "${DK1_STAGING_URL}/login"
+  credentials:
+    username: "${SHANNON_TEST_USERNAME}"
+    password: "${SHANNON_TEST_PASSWORD}"
+  success_condition:
+    type: status_code
+    value: "200"
+rules:
+  focus:
+    - description: "API surface"
+      type: url_path
+      value: "/"
+  avoid:
+    - description: "Destructive delete endpoints"
+      type: url_path
+      value: "/**/delete"
+report:
+  min_severity: medium
+  min_confidence: low
