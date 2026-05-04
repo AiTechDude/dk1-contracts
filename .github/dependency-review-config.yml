@@ -1,0 +1,6 @@
+# DK1 Security Baseline: dependency-review-config
+fail-on-severity: high
+fail-on-scopes:
+  - runtime
+comment-summary-in-pr: never
+retry-on-snapshot-warnings: true
